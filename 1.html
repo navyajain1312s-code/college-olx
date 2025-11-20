@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniMart - Pastel Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-cream: #FDF6F0;
+            --soft-pink: #FFC3C3;
+            --mint-green: #C1E1C1;
+            --baby-blue: #A2D2FF;
+            --text-dark: #5D576B;
+            --white: #ffffff;
+            --shadow: 4px 4px 0px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+
+        body { background-color: var(--bg-cream); color: var(--text-dark); }
+
+        /* --- NAVBAR --- */
+        nav {
+            background: var(--white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--baby-blue);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { 
+            font-family: 'Fredoka', sans-serif; 
+            font-size: 1.8rem; 
+            color: #FF92A4; 
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        
+        /* Search Box */
+        .search-box { position: relative; width: 35%; }
+        
+        .search-bar {
+            width: 100%;
+            background: var(--bg-cream);
+            border: 2px solid var(--soft-pink);
+            border-radius: 25px;
+            padding: 10px 45px 10px 20px;
+            outline: none;
+            color: var(--text-dark);
+            transition: 0.3s;
+            font-size: 0.95rem;
+        }
+        .search-bar:focus { border-color: var(--baby-blue); }
+
+        .search-icon {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-45%);
+            width: 18px; height: 18px; fill: var(--text-dark); opacity: 0.6; pointer-events: none;
+        }
+
+        /* Nav Buttons Group */
+        .nav-actions { display: flex; align-items: center; gap: 15px; }
+
+        /* Wishlist Link */
+        .wishlist-link {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            display: flex; align-items: center; gap: 5px;
+            transition: 0.2s; font-size: 0.9rem;
+        }
+        .wishlist-link:hover { color: #FF92A4; }
+        .wishlist-icon { width: 20px; height: 20px; fill: currentColor; }
+
+        /* --- NEW CUTE LOGIN BUTTON --- */
+        .btn-login {
+            background: var(--soft-pink);
+            color: #8e4d4d; /* Dark Red Text */
+            padding: 8px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 2px solid white; /* Sticker look */
+            box-shadow: 0 4px 0px rgba(255, 183, 178, 0.6); /* Cute 3D Shadow */
+            transition: 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-login:hover {
+            transform: translateY(2px); /* Press Down Effect */
+            box-shadow: 0 2px 0px rgba(255, 183, 178, 0.6);
+        }
+
+        /* Sell Button */
+        .btn-sell {
+            background: var(--mint-green);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: #4A7c59;
+            font-weight: 700;
+            border: 2px solid white;
+            box-shadow: 0 4px 0px rgba(171, 209, 171, 0.6);
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-sell:hover { transform: translateY(2px); box-shadow: 0 2px 0px rgba(171, 209, 171, 0.6); }
+
+        /* --- REST OF CSS --- */
+        .hero {
+            text-align: center; padding: 3rem 1rem;
+            background: linear-gradient(180deg, #fff 0%, var(--bg-cream) 100%);
+        }
+        .hero h1 { font-family: 'Fredoka', sans-serif; font-size: 3rem; color: var(--text-dark); margin-bottom: 10px; }
+        .hero p { font-size: 1.1rem; color: #888; margin-bottom: 2rem; }
+
+        .categories { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .pill {
+            background: var(--white); padding: 8px 20px; border-radius: 15px;
+            font-weight: 600; border: 2px solid var(--baby-blue); color: var(--text-dark);
+            cursor: pointer; transition: 0.2s;
+        }
+        .pill:hover { background: var(--baby-blue); color: white; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px 20px 80px 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; }
+
+        .card {
+            background: var(--white); border-radius: 25px; overflow: hidden;
+            box-shadow: var(--shadow); border: 1px solid #eee; transition: 0.3s;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .card:hover { transform: translateY(-8px); box-shadow: 8px 8px 0px var(--soft-pink); }
+
+        .img-frame { padding: 15px; background: #FFF0F3; }
+        .img-box { height: 180px; width: 100%; border-radius: 15px; overflow: hidden; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .card-body { padding: 15px 20px 20px 20px; }
+        
+        .price-badge {
+            background: var(--baby-blue); color: white; padding: 5px 12px;
+            border-radius: 10px; font-size: 0.9rem; font-weight: 700; display: inline-block; margin-bottom: 8px;
+        }
+        .title { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
+        .seller { font-size: 0.85rem; color: #999; margin-bottom: 15px; }
+        .action-btn {
+            width: 100%; padding: 12px; background: var(--soft-pink); color: #8e4d4d;
+            border: none; border-radius: 15px; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .action-btn:hover { background: #ffb1b1; color: white; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">UniMart 🌸</a>
+        
+        <div class="search-box">
+            <input type="text" class="search-bar" placeholder="Search cute stationery...">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
+            </svg>
+        </div>
+
+        <div class="nav-actions">
+            <a href="#" class="wishlist-link">
+                <svg class="wishlist-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                Wishlist
+            </a>
+
+            <a href="#" class="btn-login">
+                <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                Login
+            </a>
+
+            <a href="#" class="btn-sell">✨ Sell Item</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Your Campus Store</h1>
+        <p>Buy books, notes & cute stuff from seniors!</p>
+        
+        <div class="categories">
+            <span class="pill">📚 Books</span>
+            <span class="pill">🎀 Accessories</span>
+            <span class="pill">🖊️ Stationery</span>
+            <span class="pill">🎒 Bags</span>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="grid">
+            
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://m.media-amazon.com/images/I/81d72cyTzKL._AC_UF350,350_QL80_.jpg" alt="Book"></div></div>
+                <div class="card-body">
+                    <span class="price-badge">₹250</span>
+                    <div class="title">RD Sharma Vol 1</div>
+                    <div class="seller">From: Amit (CS)</div>
+                    <button class="action-btn">💬 Chat</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://m.media-amazon.com/images/I/61CeTj+SNQL.jpg_BO30,255,255,255_UF900,850_SR1910,1000,0,C_PIRIOFOURANDHALF-medium,BottomLeft,30,-20_ZJPHNwYW4gZm9yZWdyb3VuZD0iIzU2NTk1OSIgZm9udD0iQW1hem9uRW1iZXIgNTAiID44OTwvc3Bhbj4=,500,900,420,420,0,0_QL100_.jpg" alt="Pens"></div></div>
+                <div class="card-body">
+                    <span class="price-badge" style="background:var(--mint-green); color:#4A7c59;">₹150</span>
+                    <div class="title">Kawaii Gel Pens</div>
+                    <div class="seller">From: Sneha (Arts)</div>
+                    <button class="action-btn" style="background:var(--mint-green); color:#4A7c59;">💬 Chat</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><div style="width:100%; height:100%; background:#fff; display:flex; align-items:center; justify-content:center; color:#ccc; font-weight:bold;"> <img src="https://www.tppl.org.in/2020/12640-large_default/ccsu-bed-2-year-5-in-1-combo-pack-english-books.jpg" alt=""></div></div></div>
+                <div class="card-body">
+                    <span class="price-badge" style="background:#FFD166; color:#8a6b0e;">WANTED</span>
+                    <div class="title">Geometry Box</div>
+                    <div class="seller">Requested by: Riya</div>
+                    <button class="action-btn" style="background:#FFD166; color:#8a6b0e;">I Have This!</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://cdn.moglix.com/p/SSJFvINidjSnR-xxlarge.jpg" alt="Book"></div></div>
+                <div class="card-body">
+                    <span class="price-badge">₹400</span>
+                    <div class="title">Calculus Book</div>
+                    <div class="seller">From: Rohan (Maths)</div>
+                    <button class="action-btn">💬 Chat</button>
+                </div>
+            </div>
+
+             <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://printer.kalimstores.com/wp-content/uploads/20pum_mgl_black_04_2.jpg.jpg " alt="Figure"></div></div>
+                <div class="card-body">
+                    <span class="price-badge" style="background:var(--mint-green); color:#4A7c59;">₹550</span>
+                    <div class="title">Demon Slayer Figure</div>
+                    <div class="seller">From: Ankit (BCA)</div>
+                    <button class="action-btn" style="background:var(--mint-green); color:#4A7c59;">💬 Chat</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://cdn.thewirecutter.com/wp-content/media/2025/03/BEST-IPAD-2048px-11thgen-pencil.jpg" alt="Calc"></div></div>
+                <div class="card-body">
+                    <span class="price-badge">₹800</span>
+                    <div class="title">Casio 991EX Calc</div>
+                    <div class="seller">From: Pooja (Phy)</div>
+                    <button class="action-btn">💬 Chat</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://vastramedwear.com/cdn/shop/files/0017_DSC04300.jpg?v=1745040762" alt="Coat"></div></div>
+                <div class="card-body">
+                    <span class="price-badge">₹300</span>
+                    <div class="title">Lab Coat (M)</div>
+                    <div class="seller">From: Simran (Chem)</div>
+                    <button class="action-btn">💬 Chat</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="img-frame"><div class="img-box"><img src="https://studyhubzone.com/wp-content/uploads/2025/07/BCA-Notes.png" alt="Notes"></div></div>
+                <div class="card-body">
+                    <span class="price-badge" style="background:var(--mint-green); color:#4A7c59;">₹80</span>
+                    <div class="title">Sticky Notes</div>
+                    <div class="seller">From: Neha (Eng)</div>
+                    <button class="action-btn" style="background:var(--mint-green); color:#4A7c59;">💬 Chat</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

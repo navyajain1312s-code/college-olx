@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell on UniMart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Theme Copy from Index.html */
+        :root { --primary: #4F46E5; --bg: #F3F4F6; --white: #ffffff; }
+        body { background: var(--bg); font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        .form-container {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 15px;
+            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background: #3b35ab; }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>Sell an Item</h2>
+        <form id="sellForm">
+            <input type="text" id="title" placeholder="Product Title (e.g. Java Book)" required>
+            <input type="number" id="price" placeholder="Price (₹)" required>
+            <select id="category">
+                <option value="Books">Books</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Stationery">Stationery</option>
+            </select>
+            <input type="text" id="image_url" placeholder="Image URL (Paste link from Google)" required>
+            <textarea id="desc" rows="3" placeholder="Short Description"></textarea>
+            <input type="text" id="seller" placeholder="Your Name" required>
+            
+            <button type="submit">Post Ad</button>
+        </form>
+        <p style="text-align:center; margin-top:10px;"><a href="index.html" style="text-decoration:none; color:#666;">Back to Home</a></p>
+    </div>
+
+    <script>
+        // JavaScript to send data to Backend
+        document.getElementById('sellForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                title: document.getElementById('title').value,
+                price: document.getElementById('price').value,
+                category: document.getElementById('category').value,
+                image_url: document.getElementById('image_url').value,
+                description: document.getElementById('desc').value,
+                seller_name: document.getElementById('seller').value
+            };
+
+            // Sending data to Node.js Server
+            const response = await fetch('http://localhost:5000/add-product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if(response.ok) {
+                alert("Ad Posted Successfully!");
+                window.location.href = 'index.html';
+            } else {
+                alert("Error posting ad");
+            }
+        });
+    </script>
+</body>
+</html>
