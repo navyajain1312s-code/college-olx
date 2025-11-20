@@ -1,0 +1,210 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cart — UniMart</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDF6F0;
+            --text: #5D576B;
+            --accent: #FF92A4
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Quicksand', sans-serif;
+            margin: 0;
+            padding: 22px
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px
+        }
+
+        .logo {
+            font-family: 'Fredoka';
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 20px
+        }
+
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto
+        }
+
+        .list {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .05)
+        }
+
+        .item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0
+        }
+
+        .item:last-child {
+            border-bottom: 0
+        }
+
+        .thumb {
+            width: 84px;
+            height: 84px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f7f7f7;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        .meta {
+            flex: 1
+        }
+
+        .meta .title {
+            font-weight: 700
+        }
+
+        .meta .seller {
+            color: #777;
+            font-size: 13px
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .controls button {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            background: #fafafa;
+            cursor: pointer
+        }
+
+        .summary {
+            margin-top: 14px;
+            text-align: right
+        }
+
+        .total {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 6px
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #666
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top">
+        <a class="logo" href="1.html">← UniMart</a>
+        <a href="1.html" style="text-decoration:none;color:inherit">Continue shopping</a>
+    </div>
+
+    <div class="wrap">
+        <div id="list" class="list"></div>
+        <div class="summary" id="summary"></div>
+    </div>
+
+    <script>
+        const CART_KEY = 'unimart_cart_v1';
+        function readCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; } }
+        function writeCart(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); render(); }
+
+        function formatPrice(p) { if (p == null) return '—'; return '₹' + Number(p).toLocaleString(); }
+
+        function render() {
+            const listEl = document.getElementById('list');
+            const cart = readCart();
+            if (!cart.length) {
+                listEl.innerHTML = '<div class="empty">Your cart is empty.</div>';
+                document.getElementById('summary').innerHTML = '';
+                return;
+            }
+            listEl.innerHTML = '';
+            let total = 0;
+            cart.forEach((it, idx) => {
+                const subtotal = (it.price || 0) * (it.qty || 0);
+                total += subtotal;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.innerHTML = `
+          <div class="thumb"><img src="${it.img || ''}" alt=""></div>
+          <div class="meta">
+            <div class="title">${it.title}</div>
+            <div class="seller">${it.seller || ''}</div>
+            <div style="margin-top:6px">${it.price != null ? '<strong>' + formatPrice(it.price) + '</strong>' : '<em>Price unavailable</em>'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+            <div class="controls">
+              <button class="dec" data-idx="${idx}">-</button>
+              <div style="min-width:42px;text-align:center">${it.qty}</div>
+              <button class="inc" data-idx="${idx}">+</button>
+            </div>
+            <div style="font-weight:700">${formatPrice(subtotal)}</div>
+            <button class="remove" data-idx="${idx}" style="margin-top:6px;padding:6px 8px;border-radius:8px;border:1px solid #eee;background:#fff;cursor:pointer">Remove</button>
+          </div>
+        `;
+                listEl.appendChild(item);
+            });
+
+            document.getElementById('summary').innerHTML = `<div class="total">Total: ${formatPrice(total)}</div>`;
+            attachHandlers();
+        }
+
+        function attachHandlers() {
+            document.querySelectorAll('.inc').forEach(b => {
+                b.onclick = () => {
+                    const i = Number(b.dataset.idx); const cart = readCart();
+                    cart[i].qty = (cart[i].qty || 0) + 1; writeCart(cart);
+                };
+            });
+            document.querySelectorAll('.dec').forEach(b => {
+                b.onclick = () => {
+                    const i = Number(b.dataset.idx); const cart = readCart();
+                    cart[i].qty = Math.max(1, (cart[i].qty || 1) - 1); writeCart(cart);
+                };
+            });
+            document.querySelectorAll('.remove').forEach(b => {
+                b.onclick = () => {
+                    const i = Number(b.dataset.idx); const cart = readCart();
+                    cart.splice(i, 1); writeCart(cart);
+                };
+            });
+        }
+
+        // on load
+        render();
+    </script>
+</body>
+
+</html>

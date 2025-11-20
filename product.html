@@ -1,0 +1,228 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Product — UniMart</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-cream: #FDF6F0;
+            --text-dark: #5D576B;
+            --accent: #FF92A4
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif
+        }
+
+        body {
+            background: var(--bg-cream);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 26px
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px
+        }
+
+        .logo {
+            font-family: 'Fredoka';
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 20px
+        }
+
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .05)
+        }
+
+        .img-box {
+            width: 100%;
+            height: 420px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f7f7f7;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 6px
+        }
+
+        .seller {
+            color: #777;
+            margin-bottom: 10px
+        }
+
+        .price {
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: #2b7a7a;
+            margin-bottom: 8px
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 12px 0
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700
+        }
+
+        .qty-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .qty-controls button {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            background: #fafafa;
+            cursor: pointer
+        }
+
+        .cart-counter {
+            margin-left: 8px
+        }
+
+        .small {
+            color: #666;
+            font-size: 13px
+        }
+
+        @media (max-width:900px) {
+            .wrap {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top">
+        <a class="logo" href="1.html">← UniMart</a>
+        <a id="cartLink" href="cart.html" style="text-decoration:none;color:inherit">🛒 <span id="cartCountSmall"
+                style="font-weight:700;display:none"></span></a>
+    </div>
+
+    <div class="wrap">
+        <div class="card" id="imgCard">
+            <div class="img-box"><img id="productImage" src="" alt="product"></div>
+        </div>
+
+        <div class="card" id="infoCard">
+            <div class="title" id="title">Product</div>
+            <div class="seller" id="seller">From: —</div>
+            <div class="price" id="price">₹0</div>
+
+            <div class="row">
+                <div class="qty-controls">
+                    <button id="dec">-</button>
+                    <input id="qty" value="1"
+                        style="width:54px;text-align:center;padding:6px;border-radius:6px;border:1px solid #eee">
+                    <button id="inc">+</button>
+                </div>
+                <button class="btn" id="addCart">Add to cart</button>
+            </div>
+
+            <div class="small">Meet in person to exchange; this is a student-to-student marketplace.</div>
+        </div>
+    </div>
+
+    <script>
+        // Minimal product list (must match indexes in 1.html)
+        const products = [
+            { id: 0, title: 'RD Sharma Vol 1', price: 250, img: 'https://m.media-amazon.com/images/I/81d72cyTzKL._AC_UF350,350_QL80_.jpg', seller: 'Amit (CS)' },
+            { id: 1, title: 'Kawaii Gel Pens', price: 150, img: 'https://m.media-amazon.com/images/I/61CeTj+SNQL.jpg', seller: 'Sneha (Arts)' },
+            { id: 2, title: 'Geometry Box', price: null, img: 'https://www.tppl.org.in/2020/12640-large_default/ccsu-bed-2-year-5-in-1-combo-pack-english-books.jpg', seller: 'Riya (Request)' },
+            { id: 3, title: 'Calculus Book', price: 400, img: 'https://cdn.moglix.com/p/SSJFvINidjSnR-xxlarge.jpg', seller: 'Rohan (Maths)' },
+            { id: 4, title: 'Demon Slayer Figure', price: 550, img: 'https://printer.kalimstores.com/wp-content/uploads/20pum_mgl_black_04_2.jpg.jpg', seller: 'Ankit (BCA)' },
+            { id: 5, title: 'Casio 991EX Calc', price: 800, img: 'https://cdn.thewirecutter.com/wp-content/media/2025/03/BEST-IPAD-2048px-11thgen-pencil.jpg', seller: 'Pooja (Phy)' },
+            { id: 6, title: 'Lab Coat (M)', price: 300, img: 'https://vastramedwear.com/cdn/shop/files/0017_DSC04300.jpg?v=1745040762', seller: 'Simran (Chem)' },
+            { id: 7, title: 'Sticky Notes', price: 80, img: 'https://studyhubzone.com/wp-content/uploads/2025/07/BCA-Notes.png', seller: 'Neha (Eng)' }
+        ];
+
+        const params = new URLSearchParams(location.search);
+        const id = Number(params.get('id') || 0);
+        const p = products.find(x => x.id === id) || products[0];
+
+        // populate
+        document.getElementById('title').textContent = p.title;
+        document.getElementById('seller').textContent = 'From: ' + p.seller;
+        document.getElementById('productImage').src = p.img;
+        document.getElementById('price').textContent = p.price ? '₹' + p.price : 'WANTED';
+
+        // qty controls
+        const qtyInput = document.getElementById('qty');
+        document.getElementById('inc').addEventListener('click', () => qtyInput.value = Number(qtyInput.value || 1) + 1);
+        document.getElementById('dec').addEventListener('click', () => { qtyInput.value = Math.max(1, Number(qtyInput.value || 1) - 1); });
+
+        // cart helper (same key as main page)
+        const CART_KEY = 'unimart_cart_v1';
+        function readCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; } }
+        function writeCart(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); updateCartIndicator(); }
+
+        document.getElementById('addCart').addEventListener('click', () => {
+            const qty = Math.max(1, Number(qtyInput.value || 1));
+            const cart = readCart();
+            const idx = cart.findIndex(i => i.id === p.id);
+            if (idx > -1) cart[idx].qty += qty;
+            else cart.push({ id: p.id, title: p.title, price: p.price, img: p.img, seller: p.seller, qty });
+            writeCart(cart);
+            // tiny feedback
+            alert('Added to cart');
+        });
+
+        // cart indicator
+        function updateCartIndicator() {
+            const cart = readCart();
+            const totalQty = cart.reduce((s, i) => s + (i.qty || 0), 0);
+            const el = document.getElementById('cartCountSmall');
+            if (totalQty > 0) { el.style.display = 'inline-block'; el.textContent = ' ' + totalQty; } else { el.style.display = 'none'; }
+        }
+        updateCartIndicator();
+    </script>
+</body>
+
+</html>

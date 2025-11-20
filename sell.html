@@ -1,95 +1,537 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Sell on UniMart</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;600&display=swap"
+        rel="stylesheet">
     <style>
-        /* Theme Copy from Index.html */
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --white: #ffffff; }
-        body { background: var(--bg); font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        
-        .form-container {
-            background: var(--white);
-            padding: 40px;
-            border-radius: 15px;
-            width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        :root {
+            --bg: #FDF6F0;
+            --card: #fff;
+            --accent: #FF92A4;
+            --muted: #7B7B86;
+            --pill: #A2D2FF;
+            --glass: rgba(255, 255, 255, 0.75);
         }
-        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            outline: none;
+
+        * {
+            box-sizing: border-box
         }
-        button {
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .wrap {
             width: 100%;
-            background: var(--primary);
-            color: white;
-            padding: 12px;
+            max-width: 980px
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px
+        }
+
+        .brand {
+            font-family: 'Fredoka';
+            color: var(--accent);
+            font-size: 1.4rem;
+            text-decoration: none
+        }
+
+        .auth-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            padding: 9px 12px;
+            border-radius: 10px;
             border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
+            font-weight: 700;
+            cursor: pointer
         }
-        button:hover { background: #3b35ab; }
+
+        .btn.ghost {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent)
+        }
+
+        /* form card */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .06)
+        }
+
+        .h2 {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            color: var(--muted)
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--muted)
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            font-size: 0.95rem;
+            outline: none;
+            background: var(--glass)
+        }
+
+        input[type="file"] {
+            padding: 6px
+        }
+
+        .row {
+            display: flex;
+            gap: 10px
+        }
+
+        .small {
+            font-size: 0.85rem;
+            color: #666
+        }
+
+        .preview {
+            width: 100%;
+            height: 220px;
+            background: #fafafa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px dashed #eee
+        }
+
+        .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        .meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .submit {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .progress {
+            height: 8px;
+            background: #eee;
+            border-radius: 8px;
+            overflow: hidden
+        }
+
+        .progress>i {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--pill), var(--accent))
+        }
+
+        /* my listings */
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 360px;
+            overflow: auto;
+            padding-right: 6px
+        }
+
+        .list-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #f0f0f0
+        }
+
+        .thumb {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            flex-shrink: 0
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        .item-meta {
+            flex: 1
+        }
+
+        .muted {
+            color: #888;
+            font-size: 13px
+        }
+
+        .danger {
+            background: #FF6B6B;
+            color: #fff;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 8px;
+            cursor: pointer
+        }
+
+        /* responsive */
+        @media (max-width:900px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+
+            .card {
+                padding: 14px
+            }
+
+            .preview {
+                height: 200px
+            }
+        }
     </style>
 </head>
-<body>
 
-    <div class="form-container">
-        <h2>Sell an Item</h2>
-        <form id="sellForm">
-            <input type="text" id="title" placeholder="Product Title (e.g. Java Book)" required>
-            <input type="number" id="price" placeholder="Price (₹)" required>
-            <select id="category">
-                <option value="Books">Books</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Stationery">Stationery</option>
-            </select>
-            <input type="text" id="image_url" placeholder="Image URL (Paste link from Google)" required>
-            <textarea id="desc" rows="3" placeholder="Short Description"></textarea>
-            <input type="text" id="seller" placeholder="Your Name" required>
-            
-            <button type="submit">Post Ad</button>
-        </form>
-        <p style="text-align:center; margin-top:10px;"><a href="index.html" style="text-decoration:none; color:#666;">Back to Home</a></p>
+<body>
+    <div class="wrap">
+        <header>
+            <a class="brand" href="1.html">UniMart • Sell</a>
+            <div class="auth-btns">
+                <div id="userInfo" style="display:flex;align-items:center;gap:10px"></div>
+                <button id="signInBtn" class="btn">Sign in</button>
+                <button id="signOutBtn" class="btn ghost" style="display:none">Sign out</button>
+            </div>
+        </header>
+
+        <main class="grid">
+            <!-- left: form -->
+            <section class="card" aria-labelledby="sell-title">
+                <div>
+                    <div class="h2" id="sell-title">List an item — quick & cute</div>
+                    <p class="small">Sign in to post. Images will be stored securely and the listing appears on the
+                        marketplace.</p>
+                </div>
+
+                <form id="sellForm">
+                    <label>Title<input id="title" type="text" required
+                            placeholder="e.g. Calculus book - good condition"></label>
+
+                    <div class="row">
+                        <label style="flex:1">Price (₹)
+                            <input id="price" type="number" min="0" step="1" placeholder="e.g. 250" required>
+                        </label>
+                        <label style="width:140px">Category
+                            <select id="category">
+                                <option>Books</option>
+                                <option>Stationery</option>
+                                <option>Electronics</option>
+                                <option>Bags</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>Short description
+                        <textarea id="desc" rows="3" placeholder="Condition, edition, any defects..."></textarea>
+                    </label>
+
+                    <label>Image (jpg/png) — recommended 800×600
+                        <input id="imageFile" type="file" accept="image/*" />
+                    </label>
+
+                    <div class="preview" id="previewBox">
+                        <div class="small">No image selected</div>
+                    </div>
+
+                    <div class="submit">
+                        <button id="postBtn" class="btn" type="submit">Post listing</button>
+                        <div style="flex:1">
+                            <div class="progress" aria-hidden="true" id="progressBar" style="display:none"><i></i></div>
+                        </div>
+                    </div>
+
+                    <div id="status" class="small" role="status" aria-live="polite"></div>
+                </form>
+            </section>
+
+            <!-- right: my listings -->
+            <aside class="card">
+                <div class="h2">My listings</div>
+                <div class="small">Listings posted by you (only visible after sign-in)</div>
+                <div id="list" class="list" style="margin-top:10px">
+                    <div class="muted">No listings yet.</div>
+                </div>
+            </aside>
+        </main>
     </div>
 
-    <script>
-        // JavaScript to send data to Backend
-        document.getElementById('sellForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const data = {
-                title: document.getElementById('title').value,
-                price: document.getElementById('price').value,
-                category: document.getElementById('category').value,
-                image_url: document.getElementById('image_url').value,
-                description: document.getElementById('desc').value,
-                seller_name: document.getElementById('seller').value
-            };
+    <!-- Firebase + logic -->
+    <script type="module">
+        // ----- CONFIG: paste your Firebase config here -----
+        const firebaseConfig = {
+            apiKey: "REPLACE_WITH_YOUR_APIKEY",
+            authDomain: "REPLACE.firebaseapp.com",
+            projectId: "REPLACE",
+            storageBucket: "REPLACE.appspot.com",
+            messagingSenderId: "REPLACE",
+            appId: "REPLACE"
+        };
+        // ----- end config -----
 
-            // Sending data to Node.js Server
-            const response = await fetch('http://localhost:5000/add-product', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+        // Firebase modular SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, orderBy, serverTimestamp, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+        import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-storage.js";
 
-            if(response.ok) {
-                alert("Ad Posted Successfully!");
-                window.location.href = 'index.html';
-            } else {
-                alert("Error posting ad");
+        // init
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // DOM
+        const signInBtn = document.getElementById('signInBtn');
+        const signOutBtn = document.getElementById('signOutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const sellForm = document.getElementById('sellForm');
+        const imageFile = document.getElementById('imageFile');
+        const previewBox = document.getElementById('previewBox');
+        const postBtn = document.getElementById('postBtn');
+        const status = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+        const progressInner = progressBar.querySelector('i');
+        const listEl = document.getElementById('list');
+
+        // Helper: show status
+        function showStatus(msg, err = false) {
+            status.textContent = msg || '';
+            status.style.color = err ? '#b30000' : '#333';
+        }
+
+        // SIMPLE sign-in flow using Google popup or email prompt
+        signInBtn.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                // onAuthStateChanged handles UI updates
+            } catch (err) {
+                // fallback to email/password flow if popup blocked
+                const wantEmail = confirm('Google sign-in failed. Do you want to sign in/sign up with email instead?');
+                if (!wantEmail) return;
+                const email = prompt('Email:'); if (!email) return;
+                const pw = prompt('Choose a password (min 6 chars):'); if (!pw) return;
+                try {
+                    // first try create user; if it exists, sign in
+                    await createUserWithEmailAndPassword(auth, email, pw);
+                } catch (e) {
+                    // if exists, try sign in
+                    try { await signInWithEmailAndPassword(auth, email, pw); }
+                    catch (e2) { alert('Email sign-in failed: ' + e2.message); }
+                }
             }
         });
+
+        signOutBtn.addEventListener('click', () => signOut(auth));
+
+        // Auth state observer
+        let currentUser = null;
+        onAuthStateChanged(auth, user => {
+            currentUser = user;
+            if (user) {
+                userInfo.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+            <img src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+            <div style="font-size:13px">${user.displayName || user.email}</div>
+          </div>`;
+                signInBtn.style.display = 'none';
+                signOutBtn.style.display = '';
+                // load user's listings
+                loadMyListings();
+            } else {
+                userInfo.innerHTML = '';
+                signInBtn.style.display = '';
+                signOutBtn.style.display = 'none';
+                listEl.innerHTML = '<div class="muted">Sign in to see your listings.</div>';
+            }
+        });
+
+        // preview selected image
+        imageFile.addEventListener('change', () => {
+            const f = imageFile.files && imageFile.files[0];
+            if (!f) { previewBox.innerHTML = '<div class="small">No image selected</div>'; return; }
+            const url = URL.createObjectURL(f);
+            previewBox.innerHTML = `<img src="${url}" alt="preview">`;
+        });
+
+        // Post listing handler
+        sellForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            if (!currentUser) { alert('You must sign in to post a listing.'); return; }
+
+            // gather values
+            const title = document.getElementById('title').value.trim();
+            const priceRaw = document.getElementById('price').value;
+            const price = priceRaw === '' ? null : Number(priceRaw);
+            const category = document.getElementById('category').value;
+            const desc = document.getElementById('desc').value.trim();
+
+            const file = imageFile.files && imageFile.files[0];
+
+            if (!title) { showStatus('Enter a title', true); return; }
+            if (price === null) { showStatus('Enter price or 0', true); return; }
+            showStatus('Uploading — please wait...');
+
+            postBtn.disabled = true;
+            progressBar.style.display = 'block';
+            progressInner.style.width = '0%';
+
+            try {
+                // 1) upload image if present
+                let imageURL = '';
+                if (file) {
+                    const path = `product-images/${currentUser.uid}/${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+                    const sref = sRef(storage, path);
+                    const uploadTask = uploadBytesResumable(sref, file);
+                    // progress via promise wrapper
+                    await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed', snapshot => {
+                            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                            progressInner.style.width = pct + '%';
+                        }, err => reject(err), async () => {
+                            imageURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve();
+                        });
+                    });
+                }
+
+                // 2) write doc to Firestore
+                const docRef = await addDoc(collection(db, 'products'), {
+                    title, price, category, description: desc || '', imageURL: imageURL || '', sellerId: currentUser.uid,
+                    sellerName: currentUser.displayName || currentUser.email || 'Seller', createdAt: serverTimestamp()
+                });
+
+                showStatus('Listing posted — refreshing your listings.');
+                // reset form
+                sellForm.reset();
+                previewBox.innerHTML = '<div class="small">No image selected</div>';
+                progressBar.style.display = 'none';
+                postBtn.disabled = false;
+                // reload my listings
+                loadMyListings();
+
+            } catch (error) {
+                console.error(error);
+                showStatus('Error posting listing: ' + (error.message || error), true);
+                postBtn.disabled = false;
+            }
+        });
+
+        // Load "my listings"
+        async function loadMyListings() {
+            if (!currentUser) { listEl.innerHTML = '<div class="muted">Sign in to see your listings.</div>'; return; }
+            listEl.innerHTML = '<div class="muted">Loading...</div>';
+            try {
+                // query product docs where sellerId == currentUser.uid
+                const q = query(collection(db, 'products'), where('sellerId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+                const snap = await getDocs(q);
+                if (snap.empty) { listEl.innerHTML = '<div class="muted">No listings yet. Post your first item!</div>'; return; }
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.innerHTML = `
+            <div class="thumb"><img src="${data.imageURL || 'https://via.placeholder.com/300'}" alt=""></div>
+            <div class="item-meta">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <div style="font-weight:700">${data.title}</div>
+                <div style="min-width:60px;text-align:right;font-weight:700">${data.price != null ? '₹' + data.price : '—'}</div>
+              </div>
+              <div class="muted">${data.category || ''}</div>
+              <div class="muted" style="font-size:12px;margin-top:6px">${(data.description || '').slice(0, 80)}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+              <button class="danger" data-id="${docSnap.id}" title="Delete listing">Delete</button>
+            </div>
+          `;
+                    listEl.appendChild(div);
+                });
+
+                // attach delete handlers
+                listEl.querySelectorAll('.danger').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('Delete this listing? This cannot be undone.')) return;
+                        const id = btn.dataset.id;
+                        try {
+                            await deleteDoc(doc(db, 'products', id));
+                            btn.textContent = 'Deleted';
+                            loadMyListings();
+                        } catch (e) {
+                            alert('Delete failed: ' + e.message);
+                        }
+                    });
+                });
+
+            } catch (e) {
+                console.error(e);
+                listEl.innerHTML = '<div class="muted">Failed to load listings.</div>';
+            }
+        }
+
+        // when page loads and auth state is already present, onAuthStateChanged will call loadMyListings
     </script>
 </body>
+
 </html>
