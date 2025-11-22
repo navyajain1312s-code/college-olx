@@ -119,7 +119,8 @@ if (btnClose) btnClose.addEventListener('click', () => { widget.style.display = 
 if (btnMin) btnMin.addEventListener('click', () => { widget.style.display = 'none'; if(btnOpen) btnOpen.style.display = 'inline-block'; });
 
 /* Chat DB wiring */
-const SHOP_ID = 'shop-123';
+const SHOP_ID = window.SHOP_ID || 'shop-123';
+
 const CHAT_PATH = `chats/${SHOP_ID}/messages`;
 let chatRef = null;
 let childListener = null;
