@@ -1,11 +1,11 @@
 // chat.js (ES module - buyer widget) — debugged + robust
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+import { initializeApp } from "./mock-firebase.js";
 import {
   getDatabase, ref, push, onChildAdded, off, query, limitToLast, serverTimestamp, get
-} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+} from "./mock-firebase.js";
 import {
   getAuth, signInAnonymously, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+} from "./mock-firebase.js";
 
 /* ====== FIREBASE CONFIG - ensure databaseURL is correct ====== */
 const firebaseConfig = {
@@ -82,11 +82,12 @@ const ROOT = document.getElementById('chat-root');
 if (!ROOT) {
   console.error('No #chat-root found in HTML.');
 } else {
+  console.log('Found #chat-root, rendering widget...');
   ROOT.innerHTML = `
     <button class="chat-open-btn" id="openBtn" aria-label="Open chat">Chat</button>
     <div id="widget" class="chat-container" style="display:none" role="region" aria-label="Chat widget">
       <div class="chat-header">
-        <div>Chat with seller</div>
+        <div id="chatTitle">Chat with seller</div>
         <div>
           <button id="minBtn" title="Minimize" style="background:transparent;border:0;color:#fff;cursor:pointer">—</button>
           <button id="closeBtn" title="Close" style="background:transparent;border:0;color:#fff;cursor:pointer">✕</button>
@@ -113,29 +114,32 @@ const messagesEl = document.getElementById('messages');
 const form = document.getElementById('form');
 const inputMsg = document.getElementById('msg');
 const inputName = document.getElementById('name');
+const chatTitle = document.getElementById('chatTitle');
 
-if (btnOpen) btnOpen.addEventListener('click', () => { widget.style.display = 'flex'; btnOpen.style.display = 'none'; setTimeout(()=> inputMsg.focus(), 120); });
-if (btnClose) btnClose.addEventListener('click', () => { widget.style.display = 'none'; if(btnOpen) btnOpen.style.display = 'inline-block'; });
-if (btnMin) btnMin.addEventListener('click', () => { widget.style.display = 'none'; if(btnOpen) btnOpen.style.display = 'inline-block'; });
+if (btnOpen) btnOpen.addEventListener('click', () => { widget.style.display = 'flex'; btnOpen.style.display = 'none'; setTimeout(() => inputMsg.focus(), 120); });
+if (btnClose) btnClose.addEventListener('click', () => { widget.style.display = 'none'; if (btnOpen) btnOpen.style.display = 'inline-block'; });
+if (btnMin) btnMin.addEventListener('click', () => { widget.style.display = 'none'; if (btnOpen) btnOpen.style.display = 'inline-block'; });
 
 /* Chat DB wiring */
-const SHOP_ID = window.SHOP_ID || 'shop-123';
-
-const CHAT_PATH = `chats/${SHOP_ID}/messages`;
+let currentShopId = window.SHOP_ID || 'shop-123';
 let chatRef = null;
 let childListener = null;
 let latestQuery = null;
 
-function escapeHtml(s = '') {
-  return s
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'",'&#39;');
+function getChatPath() {
+  return `chats/${currentShopId}/messages`;
 }
 
-function renderMessage(m){
+function escapeHtml(s = '') {
+  return s
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function renderMessage(m) {
   if (!m) return;
   const wrapper = document.createElement('div');
   wrapper.className = 'msg ' + (m.role === 'seller' ? 'seller' : 'client');
@@ -145,7 +149,7 @@ function renderMessage(m){
   let ts = m.ts;
   if (ts && typeof ts === 'object') ts = Date.now();
   if (!ts) ts = Date.now();
-  meta.textContent = `${m.name || (m.role==='seller' ? 'Seller' : 'You')} • ${new Date(ts).toLocaleString()}`;
+  meta.textContent = `${m.name || (m.role === 'seller' ? 'Seller' : 'You')} • ${new Date(ts).toLocaleString()}`;
 
   const body = document.createElement('div');
   body.className = 'body';
@@ -161,7 +165,7 @@ function renderMessage(m){
 /* Probe DB read permission once (using get) — returns true if readable */
 async function probeDbRead() {
   try {
-    chatRef = ref(db, CHAT_PATH);
+    chatRef = ref(db, getChatPath());
     const snap = await get(chatRef);
     // if snapshot exists or empty, read succeeded
     console.log('DB probe: read ok. snapshot exists:', snap.exists());
@@ -176,9 +180,15 @@ async function probeDbRead() {
 
 /* Attach DB listeners only after auth + probe */
 async function attachListenersSafely() {
-  if (!chatRef) chatRef = ref(db, CHAT_PATH);
+  if (!chatRef) chatRef = ref(db, getChatPath());
+
+  // Detach existing if any (to be safe)
+  if (childListener) {
+    try { off(latestQuery || chatRef, 'child_added', childListener); } catch (e) { }
+    childListener = null;
+  }
+
   latestQuery = query(chatRef, limitToLast(200));
-  if (childListener) return; // already attached
 
   // probe read permission
   const ok = await probeDbRead();
@@ -186,6 +196,9 @@ async function attachListenersSafely() {
     console.warn('attachListenersSafely: DB read probe failed — not attaching listener.');
     return;
   }
+
+  // Clear existing messages in UI when switching shops
+  messagesEl.innerHTML = '';
 
   childListener = onChildAdded(latestQuery, (snap) => {
     const data = snap.val();
@@ -200,8 +213,10 @@ async function attachListenersSafely() {
 /* Detach listeners cleanly */
 function detachListeners() {
   if (chatRef && childListener) {
-    try { off(chatRef, 'child_added', childListener); } catch(e) { /* ignore */ }
+    try { off(latestQuery || chatRef, 'child_added', childListener); } catch (e) { /* ignore */ }
     childListener = null;
+    chatRef = null;
+    latestQuery = null;
   }
 }
 
@@ -218,12 +233,13 @@ async function sendMessage(text, name) {
   }
 
   // ensure chatRef exists and listeners attached
-  if (!chatRef) chatRef = ref(db, CHAT_PATH);
+  if (!chatRef) chatRef = ref(db, getChatPath());
 
   try {
     await push(chatRef, {
       uid: auth.currentUser?.uid || null,
       name,
+      buyerName: name || 'Guest', // For grouping conversations in admin
       text,
       role: 'client',
       ts: serverTimestamp()
@@ -280,3 +296,34 @@ onAuthStateChanged(auth, async (user) => {
   // try to sign in; actual attach happens in onAuthStateChanged handler
   await trySignInAnonymous(2);
 })();
+
+/* ====== EXPORTED API ====== */
+window.openChatWidget = function (shopId, productName, userName) {
+  console.log('Opening chat for shop:', shopId, 'Product:', productName);
+
+  if (shopId && shopId !== currentShopId) {
+    detachListeners();
+    currentShopId = shopId;
+    attachListenersSafely();
+  }
+
+  // Update UI
+  if (productName) {
+    if (chatTitle) chatTitle.textContent = `Chat about ${productName}`;
+    // Optional: Pre-fill message if empty
+    if (inputMsg && !inputMsg.value) {
+      inputMsg.value = `Hi, is "${productName}" available?`;
+    }
+  }
+
+  if (userName && inputName) {
+    inputName.value = userName;
+  }
+
+  // Show widget
+  if (widget) {
+    widget.style.display = 'flex';
+    if (btnOpen) btnOpen.style.display = 'none';
+    setTimeout(() => inputMsg.focus(), 120);
+  }
+};

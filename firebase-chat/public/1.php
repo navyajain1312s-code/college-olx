@@ -1,3 +1,26 @@
+<?php
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.html');
+    exit();
+}
+
+$username = $_SESSION['username'] ?? 'User';
+$email = $_SESSION['email'] ?? '';
+
+// Fetch products from database
+require_once 'db_connect.php';
+$products = [];
+try {
+    $sql = "SELECT * FROM products ORDER BY created_at DESC";
+    $stmt = $conn->query($sql);
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Handle error silently, products will be empty
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -399,15 +422,15 @@
                 Wishlist
             </a>
 
-            <a href="login.html" class="btn-login">
-                <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24">
-                    <path
-                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
-                Login
-            </a>
+            <!-- User Info and Logout -->
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="color: var(--text-dark); font-weight:600;">👤 <?php echo htmlspecialchars($username); ?></span>
+                <a href="logout.php" class="btn-login" style="background: #ffc3c3;">Logout</a>
+            </div>
 
-            <a href="sell.html" class="btn-sell">✨ Sell Item</a>
+            <a href="admins.php" class="btn-sell" style="background: #667eea;">💬 My Messages</a>
+
+            <a href="sell.php" class="btn-sell">✨ Sell Item</a>
 
             <!-- CART ICON (persistent) -->
             <a id="cartBtn" href="cart.html" class="cart-counter" title="View cart" style="margin-left:6px; text-decoration:none; color:inherit;">
@@ -431,119 +454,21 @@
     <div class="container">
         <div class="grid" id="productGrid">
 
-            <!-- Note: I preserved your original markup and images. I only added a data-index attribute to each card -->
-            <div class="card" data-index="0">
-                <div class="img-frame">
-                    <div class="img-box"><img
-                            src="https://m.media-amazon.com/images/I/81d72cyTzKL._AC_UF350,350_QL80_.jpg" alt="Book">
-                    </div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge">₹250</span>
-                    <div class="title">RD Sharma Vol 1</div>
-                    <div class="seller">From: Amit (CS)</div>
-                    <button class="action-btn">💬 Chat</button>
-                </div>
-            </div>
-
-            <div class="card" data-index="1">
-                <div class="img-frame">
-                    <div class="img-box"><img
-                            src="https://m.media-amazon.com/images/I/61CeTj+SNQL.jpg_BO30,255,255,255_UF900,850_SR1910,1000,0,C_PIRIOFOURANDHALF-medium,BottomLeft,30,-20_ZJPHNwYW4gZm9yZWdyb3VuZD0iIzU2NTk1OSIgZm9udD0iQW1hem9uRW1iZXIgNTAiID44OTwvc3Bhbj4=,500,900,420,420,0,0_QL100_.jpg"
-                            alt="Pens"></div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge" style="background:var(--mint-green); color:#4A7c59;">₹150</span>
-                    <div class="title">Kawaii Gel Pens</div>
-                    <div class="seller">From: Sneha (Arts)</div>
-                    <button class="action-btn" style="background:var(--mint-green); color:#4A7c59;">💬 Chat</button>
-                </div>
-            </div>
-
-            <div class="card" data-index="2">
+            <?php foreach ($products as $index => $product): ?>
+            <div class="card" data-id="<?php echo $product['id']; ?>">
                 <div class="img-frame">
                     <div class="img-box">
-                        <div
-                            style="width:100%; height:100%; background:#fff; display:flex; align-items:center; justify-content:center; color:#ccc; font-weight:bold;">
-                            <img src="https://www.tppl.org.in/2020/12640-large_default/ccsu-bed-2-year-5-in-1-combo-pack-english-books.jpg"
-                                alt="">
-                        </div>
+                        <img src="<?php echo htmlspecialchars($product['image_url'] ?: 'https://via.placeholder.com/300'); ?>" alt="Product">
                     </div>
                 </div>
                 <div class="card-body">
-                    <span class="price-badge" style="background:#FFD166; color:#8a6b0e;">WANTED</span>
-                    <div class="title">Geometry Box</div>
-                    <div class="seller">Requested by: Riya</div>
-                    <button class="action-btn" style="background:#FFD166; color:#8a6b0e;">I Have This!</button>
+                    <span class="price-badge">₹<?php echo htmlspecialchars($product['price']); ?></span>
+                    <div class="title"><?php echo htmlspecialchars($product['title']); ?></div>
+                    <div class="seller">From: <?php echo htmlspecialchars($product['seller_name'] ?: 'Seller'); ?></div>
+                    <button class="action-btn" onclick="event.stopPropagation(); window.openChatWidget('seller-<?php echo $product['user_id']; ?>', '<?php echo htmlspecialchars($product['title'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($username, ENT_QUOTES); ?>')">💬 Chat</button>
                 </div>
             </div>
-
-            <div class="card" data-index="3">
-                <div class="img-frame">
-                    <div class="img-box"><img src="https://cdn.moglix.com/p/SSJFvINidjSnR-xxlarge.jpg" alt="Book"></div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge">₹400</span>
-                    <div class="title">Calculus Book</div>
-                    <div class="seller">From: Rohan (Maths)</div>
-                    <button class="action-btn">💬 Chat</button>
-                </div>
-            </div>
-
-            <div class="card" data-index="4">
-                <div class="img-frame">
-                    <div class="img-box"><img
-                            src="https://printer.kalimstores.com/wp-content/uploads/20pum_mgl_black_04_2.jpg.jpg "
-                            alt="Figure"></div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge" style="background:var(--mint-green); color:#4A7c59;">₹550</span>
-                    <div class="title">Demon Slayer Figure</div>
-                    <div class="seller">From: Ankit (BCA)</div>
-                    <button class="action-btn" style="background:var(--mint-green); color:#4A7c59;">💬 Chat</button>
-                </div>
-            </div>
-
-            <div class="card" data-index="5">
-                <div class="img-frame">
-                    <div class="img-box"><img
-                            src="https://cdn.thewirecutter.com/wp-content/media/2025/03/BEST-IPAD-2048px-11thgen-pencil.jpg"
-                            alt="Calc"></div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge">₹800</span>
-                    <div class="title">Casio 991EX Calc</div>
-                    <div class="seller">From: Pooja (Phy)</div>
-                    <button class="action-btn">💬 Chat</button>
-                </div>
-            </div>
-
-            <div class="card" data-index="6">
-                <div class="img-frame">
-                    <div class="img-box"><img
-                            src="https://vastramedwear.com/cdn/shop/files/0017_DSC04300.jpg?v=1745040762" alt="Coat">
-                    </div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge">₹300</span>
-                    <div class="title">Lab Coat (M)</div>
-                    <div class="seller">From: Simran (Chem)</div>
-                    <button class="action-btn">💬 Chat</button>
-                </div>
-            </div>
-
-            <div class="card" data-index="7">
-                <div class="img-frame">
-                    <div class="img-box"><img src="https://studyhubzone.com/wp-content/uploads/2025/07/BCA-Notes.png"
-                            alt="Notes"></div>
-                </div>
-                <div class="card-body">
-                    <span class="price-badge" style="background:var(--mint-green); color:#4A7c59;">₹80</span>
-                    <div class="title">Sticky Notes</div>
-                    <div class="seller">From: Neha (Eng)</div>
-                    <button class="action-btn" style="background:var(--mint-green); color:#4A7c59;">💬 Chat</button>
-                </div>
-            </div>
+            <?php endforeach; ?>
 
         </div>
     </div>
@@ -589,7 +514,7 @@
         /* Minimal product model derived from DOM - keeps HTML as single source of truth */
         const productCards = Array.from(document.querySelectorAll('.grid .card'));
         const products = productCards.map(card => {
-            const i = card.dataset.index || '';
+            const i = card.dataset.id || '';
             const title = (card.querySelector('.title') || {}).textContent || '';
             const seller = (card.querySelector('.seller') || {}).textContent || '';
             const priceText = (card.querySelector('.price-badge') || {}).textContent || '';
@@ -607,8 +532,8 @@
             card.addEventListener('click', e => {
                 // avoid when clicking the chat/CTA buttons inside the card
                 if (e.target.closest('.action-btn')) return;
-                const idx = card.dataset.index;
-                window.location.href = 'product.html?id=' + encodeURIComponent(idx);
+                const id = card.dataset.id;
+                window.location.href = 'product.php?id=' + encodeURIComponent(id);
             });
         });
 

@@ -1,201 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome Back</title>
+    <title>Welcome Back - Unimart</title>
     <style>
         body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f7f6;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-}
-/* POPUP NOTIFICATION */
-.popup {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: #4a4af4;
-    color: white;
-    padding: 15px 22px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    transform: translateY(20px);
-    font-size: 15px;
-}
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
 
-.popup.show {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: all;
-}
+        .popup {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4a4af4;
+            color: white;
+            padding: 15px 22px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(20px);
+            font-size: 15px;
+            z-index: 1000;
+        }
 
-#notification-popup {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #4CAF50; 
-    color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.4s, visibility 0.4s, transform 0.4s;
-    z-index: 1000; 
-}
+        .popup.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
 
+        .card-container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
 
-#notification-popup.notification-visible {
-    opacity: 1;
-    visibility: visible;
-    
-    transform: translateX(-50%) translateY(-5px); 
-}
-.card-container {
-    background: #fff;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-}
+        .title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: bold;
+        }
 
-.title {
-    font-size: 1.8rem;
-    margin-bottom: 30px;
-    color: #333;
-    font-weight: bold;
-}
+        .tab-selector {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
 
-/* Tab Selector Styles */
-.tab-selector {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 30px;
-}
+        .tab {
+            flex-grow: 1;
+            padding: 10px 0;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
 
-.tab {
-    flex-grow: 1;
-    padding: 10px 0;
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #666;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
+        .tab.active {
+            background-color: #fff;
+            color: #4a69bd;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
 
-.tab.active {
-    background-color: #fff; /* Keep background light */
-    color: #4a69bd; /* Highlight color for active tab */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
+        .form-body {
+            text-align: left;
+        }
 
-/* Form Styles */
-.form-body {
-    text-align: left;
-}
-.popup {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: #4a4af4;
-  color: white;
-  padding: 15px 22px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  transform: translateY(20px);
-  font-size: 15px;
-}
+        label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
 
-.popup.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: all;
-}
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
 
+        input:focus {
+            border-color: #4a69bd;
+            outline: none;
+        }
 
-label {
-    display: block;
-    font-weight: 600;
-    color: #555;
-    margin-top: 15px;
-    margin-bottom: 5px;
-}
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 30px;
+            background-color: #4a69bd;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 700;
+        }
 
-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    box-sizing: border-box;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-}
+        .submit-btn:hover {
+            background-color: #3b508d;
+        }
 
-input:focus {
-    border-color: #4a69bd;
-    outline: none;
-}
+        .forgot-password {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #777;
+        }
 
-.submit-btn {
-    width: 100%;
-    padding: 12px;
-    margin-top: 30px;
-    background-color: #4a69bd;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-weight: 700;
-}
+        .forgot-password a {
+            color: #4a69bd;
+            text-decoration: none;
+            font-weight: bold;
+        }
 
-.submit-btn:hover {
-    background-color: #3b508d;
-}
+        .hidden-form {
+            display: none;
+        }
 
-.forgot-password {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 0.9rem;
-    color: #777;
-}
-
-.forgot-password a {
-    color: #4a69bd;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-/* JavaScript Toggle Classes */
-.hidden-form {
-    display: none;
-}
-.active-form {
-    display: block;
-}
+        .active-form {
+            display: block;
+        }
     </style>
 </head>
+
 <body>
     <div class="card-container">
         <h2 class="title">Unimart</h2>
@@ -205,7 +161,7 @@ input:focus {
             <button class="tab" data-form="signup">Sign Up</button>
         </div>
 
-        <form  id="login-form" class="form-body active-form">
+        <form id="login-form" class="form-body active-form">
             <label for="login-email">Email address</label>
             <input type="email" id="login-email" placeholder="you@example.com" required>
 
@@ -225,14 +181,14 @@ input:focus {
 
             <label for="signup-email">Email address</label>
             <input type="email" id="signup-email" placeholder="you@example.com" required>
-            
+
             <label for="signup-password">Password</label>
             <input type="password" id="signup-password" placeholder="********" required>
 
             <label for="confirm-password">Confirm Password</label>
             <input type="password" id="confirm-password" placeholder="********" required>
 
-            <button type="submit" class="submit-btn" >Sign Up</button>
+            <button type="submit" class="submit-btn">Sign Up</button>
         </form>
     </div>
 
@@ -243,59 +199,126 @@ input:focus {
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.tab');
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
+            const tabs = document.querySelectorAll('.tab');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const popup = document.getElementById("popup");
+            const popupText = document.getElementById("popup-text");
 
-    const popup = document.getElementById("popup");
-    const popupText = document.getElementById("popup-text");
-
-    function showPopup(message) {
-        popupText.textContent = message;
-        popup.classList.add("show");
-
-        setTimeout(() => {
-            popup.classList.remove("show");
-        }, 3000); 
-    }
-
-    // Tab switching
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            const targetForm = tab.getAttribute('data-form');
-
-            if (targetForm === 'login') {
-                loginForm.classList.add('active-form');
-                loginForm.classList.remove('hidden-form');
-                
-                signupForm.classList.add('hidden-form');
-                signupForm.classList.remove('active-form');
-            } else {
-                signupForm.classList.add('active-form');
-                signupForm.classList.remove('hidden-form');
-
-                loginForm.classList.add('hidden-form');
-                loginForm.classList.remove('active-form');
+            function showPopup(message, isError = false) {
+                popupText.textContent = message;
+                popup.style.background = isError ? '#dc2626' : '#4a4af4';
+                popup.classList.add("show");
+                setTimeout(() => {
+                    popup.classList.remove("show");
+                }, 3000);
             }
+
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const targetForm = tab.getAttribute('data-form');
+
+                    if (targetForm === 'login') {
+                        loginForm.classList.add('active-form');
+                        loginForm.classList.remove('hidden-form');
+                        signupForm.classList.add('hidden-form');
+                        signupForm.classList.remove('active-form');
+                    } else {
+                        signupForm.classList.add('active-form');
+                        signupForm.classList.remove('hidden-form');
+                        loginForm.classList.add('hidden-form');
+                        loginForm.classList.remove('active-form');
+                    }
+                });
+            });
+
+            // Login form submission
+            loginForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+
+                if (!email || !password) {
+                    showPopup("Please fill in all fields", true);
+                    return;
+                }
+
+                try {
+                    const response = await fetch('login_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showPopup(data.message);
+                        setTimeout(() => {
+                            window.location.href = '1.php';
+                        }, 1000);
+                    } else {
+                        showPopup(data.message, true);
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showPopup("An error occurred. Please try again.", true);
+                }
+            });
+
+            // Signup form submission
+            signupForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const username = document.getElementById('signup-username').value.trim();
+                const email = document.getElementById('signup-email').value.trim();
+                const password = document.getElementById('signup-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+
+                if (!username || !email || !password || !confirmPassword) {
+                    showPopup("Please fill in all fields", true);
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showPopup("Passwords do not match", true);
+                    return;
+                }
+
+                try {
+                    const response = await fetch('signup_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username, email, password, confirmPassword })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showPopup(data.message);
+                        signupForm.reset();
+                        setTimeout(() => {
+                            tabs[0].click();
+                        }, 2000);
+                    } else {
+                        showPopup(data.message, true);
+                    }
+                } catch (error) {
+                    console.error('Signup error:', error);
+                    showPopup("An error occurred. Please try again.", true);
+                }
+            });
         });
-    });
-
-    // Login popup
-    loginForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        showPopup("Logged in successfully!");
-    });
-
-    // Signup popup
-    signupForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        showPopup("Account created successfully!");
-    });
-});
-
     </script>
 </body>
+
 </html>

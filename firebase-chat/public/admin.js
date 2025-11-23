@@ -1,181 +1,310 @@
-// admin.js (seller/admin) — improved and robust
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+// admin.js - WhatsApp-style admin panel with contacts sidebar
+import { initializeApp } from "./mock-firebase.js";
 import {
-  getDatabase, ref, onChildAdded, push, serverTimestamp, off
-} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+    getDatabase, ref, push, onChildAdded, off, serverTimestamp, get
+} from "./mock-firebase.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, signInAnonymously
+} from "./mock-firebase.js";
 
-/* ====== FIREBASE CONFIG (keep databaseURL correct) ====== */
+/* ====== FIREBASE CONFIG ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBTMgrqBiYkpD9_pGbK29leTqLkB5w3c_8",
-  authDomain: "chatbox-b9179.firebaseapp.com",
-  databaseURL: "https://chatbox-b9179-default-rtdb.firebaseio.com",
-  projectId: "chatbox-b9179",
-  storageBucket: "chatbox-b9179.appspot.com",
-  messagingSenderId: "297517994036",
-  appId: "1:297517994036:web:a8d9103e3f426b15e9ba61",
-  measurementId: "G-3B8QRQ1KGC"
+    apiKey: "AIzaSyBTMgrqBiYkpD9_pGbK29leTqLkB5w3c_8",
+    authDomain: "chatbox-b9179.firebaseapp.com",
+    databaseURL: "https://chatbox-b9179-default-rtdb.firebaseio.com",
+    projectId: "chatbox-b9179",
+    storageBucket: "chatbox-b9179.appspot.com",
+    messagingSenderId: "297517994036",
+    appId: "1:297517994036:web:a8d9103e3f426b15e9ba61",
+    measurementId: "G-3B8QRQ1KGC"
 };
-/* ======================================================= */
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-/* --- safe DOM lookups --- */
-function $(id) { return document.getElementById(id); }
+/* ====== DOM ELEMENTS ====== */
+const contactsList = document.getElementById('contactsList');
+const messagesDiv = document.getElementById('messages');
+const replyInput = document.getElementById('replyInput');
+const sendBtn = document.getElementById('sendBtn');
+const authArea = document.getElementById('authArea');
+const statusBanner = document.getElementById('statusBanner');
+const emptyChat = document.getElementById('emptyChat');
+const chatHeader = document.getElementById('chatHeader');
+const replySection = document.getElementById('replySection');
+const currentChatName = document.getElementById('currentChatName');
+const currentAvatar = document.getElementById('currentAvatar');
+const currentChatStatus = document.getElementById('currentChatStatus');
 
-const messagesDiv = $('messages');
-const shopIdInput = $('shopId');
-const replyInput = $('reply');
-const loadBtn = $('loadBtn');
-const sendBtn = $('sendBtn');
-const authArea = $('authArea');
-
-/* If elements are missing, show a console warning (prevents runtime crashes) */
-if (!messagesDiv || !shopIdInput || !replyInput || !loadBtn || !sendBtn) {
-  console.warn('admin.js: one or more expected DOM elements are missing. Check admin.html IDs.');
-}
-
-/* Simple status banner for quick feedback */
-function ensureBanner() {
-  let b = document.getElementById('__admin_status');
-  if (!b) {
-    b = document.createElement('div');
-    b.id = '__admin_status';
-    b.style.position = 'fixed';
-    b.style.right = '16px';
-    b.style.bottom = '16px';
-    b.style.zIndex = 99999;
-    b.style.background = 'rgba(0,0,0,0.6)';
-    b.style.color = '#fff';
-    b.style.padding = '8px 12px';
-    b.style.borderRadius = '8px';
-    b.style.fontSize = '13px';
-    document.body.appendChild(b);
-  }
-  return b;
-}
-const statusBanner = ensureBanner();
-function setStatus(text, warn = false) {
-  statusBanner.textContent = text;
-  statusBanner.style.background = warn ? 'rgba(183,28,28,0.9)' : 'rgba(0,0,0,0.6)';
-}
-
-/* utility: escape HTML for safety */
-function escapeHtml(str='') {
-  return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;');
-}
-
-/* track DB listener so we can detach cleanly */
+/* ====== STATE MANAGEMENT ====== */
+let allMessages = []; // Store all messages
+let contacts = new Map(); // Map of buyerName -> contact info
+let currentBuyerName = null; // Currently selected buyer
 let chatRef = null;
 let childListener = null;
+let sellerShopId = null; // Will be set based on logged-in user
 
-/* update auth area UI (if present) */
-onAuthStateChanged(auth, (user) => {
-  if (authArea) {
-    if (user) {
-      authArea.innerHTML = `Signed in as <strong>${user.displayName || user.email || 'Admin'}</strong>
-        <button id="signOutBtn" style="margin-left:8px">Sign out</button>`;
-      const btn = $('signOutBtn');
-      if (btn) btn.onclick = () => signOut(auth).catch(e => console.error('Sign-out failed', e));
-      setStatus('Admin signed in', false);
-    } else {
-      authArea.innerHTML = `<button id="signInBtn">Sign in with Google</button>`;
-      const btn = $('signInBtn');
-      if (btn) btn.onclick = () => signInWithPopup(auth, provider).catch(err => {
-        console.error('Sign-in failed', err);
-        alert('Sign-in failed. See console.');
-      });
-      setStatus('Not signed in (admin)', true);
+/* ====== STATUS MANAGEMENT ====== */
+function setStatus(text, warning = false) {
+    if (!statusBanner) return;
+    statusBanner.textContent = text;
+    statusBanner.style.background = warning ? '#ff4444' : '#00a884';
+    statusBanner.style.display = 'block';
+    setTimeout(() => {
+        statusBanner.style.display = 'none';
+    }, 3000);
+}
+
+/* ====== INIT ====== */
+function init() {
+    console.log('Admin init...');
+
+    // Add Refresh Button
+    const refreshBtn = document.createElement('button');
+    refreshBtn.textContent = '🔄 Refresh Chats';
+    refreshBtn.className = 'btn btn-secondary';
+    refreshBtn.style.marginLeft = '10px';
+    refreshBtn.onclick = () => {
+        if (sellerShopId) {
+            console.log('Manual refresh for:', sellerShopId);
+            loadAllConversations(sellerShopId);
+        } else {
+            location.reload();
+        }
+    };
+    if (authArea) authArea.appendChild(refreshBtn);
+}
+
+/* ====== LOAD CONVERSATIONS ====== */
+function loadAllConversations(shopId) {
+    if (childListener) {
+        console.log('Reloading conversations for:', shopId);
     }
-  }
-});
 
-/* Load messages for a shop - attaches a child_added listener */
-loadBtn?.addEventListener('click', () => {
-  const shop = (shopIdInput?.value || '').trim();
-  if (!shop) return alert('Enter Shop ID');
+    sellerShopId = shopId;
+    chatRef = ref(db, `chats/${shopId}/messages`);
 
-  // detach previous listener
-  if (chatRef && childListener) {
-    try {
-      off(chatRef, 'child_added', childListener);
-    } catch (e) {
-      // if off fails, clear anyway
-    }
-    childListener = null;
-    messagesDiv && (messagesDiv.innerHTML = '');
-  }
+    // Clear existing UI to avoid duplicates if re-running
+    contactsList.innerHTML = '';
+    allMessages = [];
+    contacts.clear();
 
-  const path = `chats/${shop}/messages`;
-  chatRef = ref(db, path);
+    console.log('Listening to:', `chats/${shopId}/messages`);
+    setStatus('Connecting to chat...');
 
-  messagesDiv && (messagesDiv.innerHTML = '<p>Loading messages…</p>');
-  setStatus('Loading messages…');
+    childListener = onChildAdded(chatRef, (snapshot) => {
+        const msg = snapshot.val();
+        const key = snapshot.key;
 
-  // define the callback so we can detach it later
-  childListener = (snap) => {
-    const m = snap.val();
-    const el = document.createElement('div');
-    el.style.margin = '10px 0';
-    el.style.padding = '10px';
-    el.style.borderRadius = '8px';
-    el.style.background = m.role === 'client' ? '#e6fffb' : '#f1f6f9';
-    const ts = m.ts && typeof m.ts === 'number' ? new Date(m.ts) : new Date();
-    el.innerHTML = `<div style="font-size:13px;color:#333"><strong>${escapeHtml(m.name || 'Guest')}</strong>
-                    <small style="color:#666;margin-left:8px">${ts.toLocaleString()}</small></div>
-                    <div style="margin-top:6px;white-space:pre-wrap">${escapeHtml(m.text || '')}</div>`;
-    messagesDiv && messagesDiv.appendChild(el);
-    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    setStatus('Messages loaded', false);
-  };
+        if (!msg || !msg.text) return;
 
-  try {
-    onChildAdded(chatRef, childListener, (err) => {
-      console.error('Load messages error', err);
-      messagesDiv && (messagesDiv.innerHTML = '<p style="color:red">Failed to load messages. See console.</p>');
-      setStatus('Failed to load messages', true);
+        // Add to local store
+        allMessages.push({ ...msg, key });
+
+        // Process for contacts list
+        updateContact(msg);
+
+        // If this message belongs to currently open chat, append it
+        if (currentBuyerName && msg.buyerName === currentBuyerName) {
+            renderMessage(msg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
     });
-  } catch (err) {
-    console.error('onChildAdded threw', err);
-    setStatus('Failed to attach DB listener', true);
-  }
-});
+}
 
-/* Send reply */
-sendBtn?.addEventListener('click', async () => {
-  const text = (replyInput?.value || '').trim();
-  if (!text) return alert('Enter reply text');
-  if (!chatRef) return alert('Load a Shop ID first');
+function updateContact(msg) {
+    const buyerName = msg.buyerName || msg.name || 'Unknown';
 
-  // Ensure admin signed-in
-  if (!auth.currentUser) {
-    const proceed = confirm('You are not signed in. Sign in with Google as admin?');
-    if (!proceed) return;
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error('Sign-in failed', err);
-      return alert('Sign-in failed. See console.');
-    }
-  }
-
-  try {
-    await push(chatRef, {
-      name: auth.currentUser?.displayName || 'Seller',
-      role: 'seller',
-      text,
-      ts: serverTimestamp()
+    // Update contact info
+    contacts.set(buyerName, {
+        name: buyerName,
+        lastMsg: msg.text,
+        ts: msg.ts,
     });
+
+    renderContacts();
+}
+
+function renderContacts() {
+    contactsList.innerHTML = '';
+
+    // Sort contacts by timestamp (newest first)
+    const sortedContacts = Array.from(contacts.values()).sort((a, b) => b.ts - a.ts);
+
+    sortedContacts.forEach(c => {
+        const div = document.createElement('div');
+        div.className = `contact-item ${c.name === currentBuyerName ? 'active' : ''}`;
+        div.onclick = () => openConversation(c.name);
+
+        const date = new Date(c.ts).toLocaleDateString();
+
+        div.innerHTML = `
+            <div class="avatar">${getInitials(c.name)}</div>
+            <div class="contact-info">
+                <div class="contact-header">
+                    <span class="contact-name">${escapeHtml(c.name)}</span>
+                    <span class="contact-time">${date}</span>
+                </div>
+                <div class="contact-preview">${escapeHtml(c.lastMsg)}</div>
+            </div>
+        `;
+        contactsList.appendChild(div);
+    });
+}
+
+function getInitials(name) {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function openConversation(buyerName) {
+    currentBuyerName = buyerName;
+
+    // Update UI
+    emptyChat.style.display = 'none';
+    chatHeader.style.display = 'flex';
+    messagesDiv.style.display = 'block';
+    replySection.style.display = 'flex';
+
+    currentChatName.textContent = buyerName;
+    currentAvatar.textContent = getInitials(buyerName);
+    currentChatStatus.textContent = 'online'; // Mock status
+
+    // Highlight contact
+    renderContacts();
+
+    // Render messages
+    renderMessagesForBuyer(buyerName);
+}
+
+function renderMessagesForBuyer(buyerName) {
+    messagesDiv.innerHTML = '';
+
+    // Filter messages for this buyer
+    const chatMsgs = allMessages.filter(m => {
+        return m.buyerName === buyerName;
+    });
+
+    // Sort by time
+    chatMsgs.sort((a, b) => a.ts - b.ts);
+
+    let lastDate = null;
+
+    chatMsgs.forEach(m => {
+        // Date divider
+        const date = new Date(m.ts).toLocaleDateString();
+        if (date !== lastDate) {
+            const div = document.createElement('div');
+            div.className = 'date-divider';
+            div.textContent = date;
+            messagesDiv.appendChild(div);
+            lastDate = date;
+        }
+        renderMessage(m);
+    });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function renderMessage(m) {
+    const div = document.createElement('div');
+    const isMe = m.role === 'seller';
+    div.className = `msg ${isMe ? 'sent' : 'received'}`;
+
+    const time = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    div.innerHTML = `
+        <div class="bubble">
+            <div class="txt">${escapeHtml(m.text)}</div>
+            <div class="meta">
+                ${time}
+                ${isMe ? '<span class="tick">✓✓</span>' : ''}
+            </div>
+        </div>
+    `;
+    messagesDiv.appendChild(div);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+/* ====== SEND REPLY ====== */
+sendBtn.addEventListener('click', () => {
+    const text = replyInput.value.trim();
+    if (!text || !currentBuyerName || !sellerShopId) return;
+
+    const chatPath = `chats/${sellerShopId}/messages`;
+    const messagesRef = ref(db, chatPath);
+
+    push(messagesRef, {
+        text: text,
+        role: 'seller',
+        buyerName: currentBuyerName, // CRITICAL: Tag message with buyer name so we know who it's for
+        ts: serverTimestamp()
+    });
+
     replyInput.value = '';
-    setStatus('Reply sent', false);
-  } catch (err) {
-    console.error('Send failed', err);
-    alert('Failed to send reply. See console.');
-    setStatus('Send failed', true);
-  }
 });
+
+replyInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendBtn.click();
+});
+
+/* ====== AUTH STATE MANAGEMENT ====== */
+onAuthStateChanged(auth, (user) => {
+    if (!authArea) return;
+
+    if (user) {
+        authArea.innerHTML = `
+            <span>Signed in as <strong>${escapeHtml(user.displayName || user.email || 'Admin')}</strong></span>
+            <button id="signOutBtn" class="btn btn-secondary">Sign out</button>
+        `;
+
+        // Re-add refresh button if lost
+        const refreshBtn = document.createElement('button');
+        refreshBtn.textContent = '🔄 Refresh Chats';
+        refreshBtn.className = 'btn btn-secondary';
+        refreshBtn.style.marginLeft = '10px';
+        refreshBtn.onclick = () => {
+            if (sellerShopId) loadAllConversations(sellerShopId);
+            else location.reload();
+        };
+        authArea.appendChild(refreshBtn);
+
+        const signOutBtn = document.getElementById('signOutBtn');
+        if (signOutBtn) {
+            signOutBtn.onclick = () => {
+                signOut(auth).catch(e => console.error('Sign-out failed', e));
+            };
+        }
+        setStatus('Connected', false);
+
+        // Get seller shop ID from PHP session (passed via window object)
+        const sellerUserId = window.SELLER_USER_ID || 1;
+        const shopId = `seller-${sellerUserId}`;
+        console.log('Loading conversations for seller:', sellerUserId, 'Shop ID:', shopId);
+        loadAllConversations(shopId);
+
+    } else {
+        // Auto-sign in anonymously if not signed in
+        console.log('Admin not signed in. Attempting anonymous auth...');
+        setStatus('Authenticating...', true);
+        signInAnonymously(auth).catch(e => {
+            console.error('Auto-auth failed', e);
+            authArea.innerHTML = `
+                <button id="signInBtn" class="btn btn-primary">Sign in with Google</button>
+            `;
+            document.getElementById('signInBtn').onclick = () => signInWithPopup(auth, provider);
+        });
+    }
+});
+
+init();

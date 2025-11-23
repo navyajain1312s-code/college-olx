@@ -1,17 +1,14 @@
 {
-    "rules": {
-      "chats": {
-        "$shopId": {
-          "messages": {
-            ".indexOn": ["ts"],
-            "$msgId": {
-              ".read": true,
-              ".write": "auth != null",
-              ".validate": "newData.hasChildren(['uid','name','text','role','ts']) && newData.child('text').isString() && newData.child('text').val().length <= 2000 && (newData.child('role').val() == 'client' || newData.child('role').val() == 'seller')"
-            }
-          }
+  "rules": {
+    "chats": {
+      "$shop": {
+        "messages": {
+          ".read": "auth != null",
+          ".write": "auth != null"
         }
       }
-    }
+    },
+    ".read": false,
+    ".write": false
   }
-  
+}
