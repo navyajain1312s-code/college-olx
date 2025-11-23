@@ -1,11 +1,12 @@
 // chat.js (ES module - buyer widget) — debugged + robust
-import { initializeApp } from "./mock-firebase.js";
+console.log('DEBUG: chat.js loaded');
+import { initializeApp } from "./mock-firebase-v2.js";
 import {
   getDatabase, ref, push, onChildAdded, off, query, limitToLast, serverTimestamp, get
-} from "./mock-firebase.js";
+} from "./mock-firebase-v2.js";
 import {
   getAuth, signInAnonymously, onAuthStateChanged
-} from "./mock-firebase.js";
+} from "./mock-firebase-v2.js";
 
 /* ====== FIREBASE CONFIG - ensure databaseURL is correct ====== */
 const firebaseConfig = {
@@ -121,13 +122,27 @@ if (btnClose) btnClose.addEventListener('click', () => { widget.style.display = 
 if (btnMin) btnMin.addEventListener('click', () => { widget.style.display = 'none'; if (btnOpen) btnOpen.style.display = 'inline-block'; });
 
 /* Chat DB wiring */
-let currentShopId = window.SHOP_ID || 'shop-123';
+let currentShopId = null;
+let currentBuyerId = null;
+let currentBuyerName = null;
 let chatRef = null;
 let childListener = null;
 let latestQuery = null;
 
+// Initialize IDs from window (set by PHP)
+function initializeIds() {
+  if (!currentShopId) {
+    currentShopId = window.SHOP_ID || 'shop-123';
+    currentBuyerId = window.BUYER_ID || 'guest-unknown';
+    currentBuyerName = window.BUYER_NAME || 'Guest';
+    console.log('[Chat] Initialized with:', { currentShopId, currentBuyerId, currentBuyerName });
+  }
+}
+
 function getChatPath() {
-  return `chats/${currentShopId}/messages`;
+  initializeIds(); // Ensure IDs are set
+  // Private 1-to-1 conversation path: chats/seller-X/buyer-Y/messages
+  return `chats/${currentShopId}/${currentBuyerId}/messages`;
 }
 
 function escapeHtml(s = '') {
@@ -184,7 +199,11 @@ async function attachListenersSafely() {
 
   // Detach existing if any (to be safe)
   if (childListener) {
-    try { off(latestQuery || chatRef, 'child_added', childListener); } catch (e) { }
+    try {
+      childListener(); // Call the unsubscribe function
+    } catch (e) {
+      console.warn('Error detaching listener:', e);
+    }
     childListener = null;
   }
 
@@ -212,8 +231,12 @@ async function attachListenersSafely() {
 
 /* Detach listeners cleanly */
 function detachListeners() {
-  if (chatRef && childListener) {
-    try { off(latestQuery || chatRef, 'child_added', childListener); } catch (e) { /* ignore */ }
+  if (childListener) {
+    try {
+      childListener(); // Call the unsubscribe function
+    } catch (e) {
+      console.warn('Error detaching listener:', e);
+    }
     childListener = null;
     chatRef = null;
     latestQuery = null;
@@ -222,6 +245,8 @@ function detachListeners() {
 
 /* Send message (ensures auth ready) */
 async function sendMessage(text, name) {
+  initializeIds(); // Ensure buyer IDs are initialized
+
   if (!text) return;
   if (!auth.currentUser) {
     setStatus('Not signed in — retrying auth...', true);
@@ -244,6 +269,7 @@ async function sendMessage(text, name) {
       role: 'client',
       ts: serverTimestamp()
     });
+    console.log('[Chat] Message sent to path:', getChatPath(), 'Text:', text);
     setStatus('Message sent', false);
   } catch (err) {
     console.error('Send failed:', err);

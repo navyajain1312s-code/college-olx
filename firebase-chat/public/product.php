@@ -214,12 +214,61 @@ if (!$product) {
     </div>
     <div id="chat-root" aria-live="polite"></div>
 
-<script type="module" src="chat.js"></script>
-
     <script>
         // Set shop ID based on seller's user_id for unique chat rooms per seller
         window.SHOP_ID = 'seller-<?php echo $product['user_id']; ?>';
+        console.log('SHOP_ID set to:', window.SHOP_ID);
         
+        // Set buyer information for private 1-to-1 chat
+        <?php
+        // Check if user is logged in
+        if (isset($_SESSION['user_id']) && isset($_SESSION['username'])) {
+            // Use logged-in user info
+            $buyerId = 'user-' . $_SESSION['user_id'];
+            $buyerName = $_SESSION['username'];
+            echo "window.BUYER_ID = '" . $buyerId . "';\n";
+            echo "window.BUYER_NAME = '" . addslashes($buyerName) . "';\n";
+            echo "console.log('[PHP] Logged-in user:', '" . addslashes($buyerName) . "', 'ID:', '" . $buyerId . "');\n";
+        } else {
+            // Guest user - generate or retrieve unique ID
+            $guestId = null;
+            
+            // Try to get from cookie first
+            if (isset($_COOKIE['guest_chat_id'])) {
+                $guestId = $_COOKIE['guest_chat_id'];
+                echo "console.log('[PHP] Found existing guest ID from cookie:', '" . $guestId . "');\n";
+            } else {
+                // Generate new unique guest ID
+                $guestId = 'guest-' . uniqid('', true);
+                // Set cookie for 1 year
+                setcookie('guest_chat_id', $guestId, time() + (86400 * 365), '/', '', false, true);
+                echo "console.log('[PHP] Generated new guest ID:', '" . $guestId . "');\n";
+            }
+            
+            echo "window.BUYER_ID = '" . $guestId . "';\n";
+            echo "window.BUYER_NAME = 'Guest';\n";
+        }
+        ?>
+        console.log('BUYER_ID set to:', window.BUYER_ID);
+        console.log('BUYER_NAME set to:', window.BUYER_NAME);
+    </script>
+
+    <!-- Test if ES modules work at all -->
+    <script type="module">
+        console.log('ES MODULE TEST: Inline module loaded successfully');
+    </script>
+
+    <script type="module" src="chat.js?v=6"></script>
+    <script>
+        // Fallback error handler
+        window.addEventListener('error', function(e) {
+            if (e.filename && e.filename.includes('chat.js')) {
+                console.error('CHAT.JS LOAD ERROR:', e.message, e.filename, e.lineno);
+            }
+        }, true);
+    </script>
+        
+    <script>
         // Product data for JS
         const product = {
             id: <?php echo $product['id']; ?>,

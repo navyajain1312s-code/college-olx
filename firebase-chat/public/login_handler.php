@@ -34,6 +34,7 @@ try {
 
         if (password_verify($password, $hashed_password)) {
             // Password is correct, start session
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $id;
             $_SESSION['username'] = $username;
             $_SESSION['email'] = $email;

@@ -508,11 +508,12 @@ $email = $_SESSION['email'] ?? '';
   <div class="admin-container">
     <header class="admin-header">
       <h1>💬 My Messages</h1>
-      <div class="auth-area">
+      <div class="auth-area" id="authArea">
         <span>Signed in as <strong><?php echo htmlspecialchars($username); ?></strong></span>
         <a href="1.php" class="btn btn-primary">← Back to Marketplace</a>
         <a href="logout.php" class="btn btn-secondary">Logout</a>
       </div>
+      <div id="chatStatusArea" style="display:flex;align-items:center;gap:10px;margin-left:15px;"></div>
     </header>
 
     <main class="admin-main">

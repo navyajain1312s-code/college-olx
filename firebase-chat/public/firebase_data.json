@@ -1,0 +1,129 @@
+{
+    "chats": {
+        "seller-6": {
+            "messages": {
+                "msg_test_1": {
+                    "text": "Manual Test Message",
+                    "role": "client",
+                    "buyerName": "Manual Tester",
+                    "ts": 1763900301000
+                },
+                "msg_1763900942788_5r4jodm1z": {
+                    "text": "hello",
+                    "role": "seller",
+                    "buyerName": "Manual Tester",
+                    "ts": 1763900942787
+                },
+                "msg_1763901441710_zfwimgfcp": {
+                    "uid": null,
+                    "name": "Guest",
+                    "buyerName": "Guest",
+                    "text": "hello",
+                    "role": "client",
+                    "ts": 1763901441710
+                },
+                "msg_1763901488320_oj6v2vj91": {
+                    "uid": null,
+                    "name": "Guest",
+                    "buyerName": "Guest",
+                    "text": "my name is shivanshu",
+                    "role": "client",
+                    "ts": 1763901488320
+                },
+                "msg_1763901649832_yl98mlp6l": {
+                    "uid": null,
+                    "name": "Guest",
+                    "buyerName": "Guest",
+                    "text": "Final test message",
+                    "role": "client",
+                    "ts": 1763901649832
+                },
+                "msg_1763901749999_58vrc67h2": {
+                    "text": "hello",
+                    "role": "seller",
+                    "buyerName": "Guest",
+                    "ts": 1763901749999
+                },
+                "msg_1763901774816_43yw3qi43": {
+                    "text": "hi",
+                    "role": "seller",
+                    "buyerName": "Guest",
+                    "ts": 1763901774816
+                },
+                "msg_1763901826265_0ea8m1uvv": {
+                    "uid": null,
+                    "name": "Guest",
+                    "buyerName": "Guest",
+                    "text": "hi",
+                    "role": "client",
+                    "ts": 1763901826265
+                },
+                "msg_1763902092875_vm5bkxxl0": {
+                    "uid": null,
+                    "name": "shivanshu",
+                    "buyerName": "shivanshu",
+                    "text": "Hi, is \"Final Test Laptop\" available?",
+                    "role": "client",
+                    "ts": 1763902092875
+                },
+                "msg_1763902104333_e87x7xwy8": {
+                    "text": "yes this is",
+                    "role": "seller",
+                    "buyerName": "shivanshu",
+                    "ts": 1763902104333
+                },
+                "msg_1763902133360_9nf0h37fa": {
+                    "text": "you want that",
+                    "role": "seller",
+                    "buyerName": "shivanshu",
+                    "ts": 1763902133360
+                },
+                "msg_1763902751479_8hwxrj48x": {
+                    "text": "hello",
+                    "role": "seller",
+                    "buyerName": "shivanshu",
+                    "ts": 1763902751479
+                },
+                "msg_1763902764745_ran4u6d1j": {
+                    "text": "hello",
+                    "role": "seller",
+                    "buyerName": "shivanshu",
+                    "ts": 1763902764745
+                },
+                "msg_1763902784412_dte1dcybq": {
+                    "text": "hello",
+                    "role": "seller",
+                    "buyerName": "shivanshu",
+                    "ts": 1763902784412
+                }
+            },
+            "guest-unknown": {
+                "messages": {
+                    "msg_1763904744413_i5v8awfbr": {
+                        "uid": null,
+                        "name": "navya",
+                        "buyerName": "navya",
+                        "text": "Hi, is \"Final Test Laptop\" ahellovailable?",
+                        "role": "client",
+                        "ts": 1763904744412
+                    },
+                    "msg_1763904921064_6on5o6mqn": {
+                        "uid": null,
+                        "name": "shivanshu",
+                        "buyerName": "shivanshu",
+                        "text": "Hi, is \"Final Test Laptop\" available?",
+                        "role": "client",
+                        "ts": 1763904921064
+                    },
+                    "msg_1763904935171_rber5rk32": {
+                        "text": "yes",
+                        "role": "seller",
+                        "buyerName": "navya",
+                        "name": "Seller Final",
+                        "ts": 1763904935171
+                    }
+                }
+            }
+        }
+    }
+}

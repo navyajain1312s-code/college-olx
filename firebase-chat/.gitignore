@@ -1,0 +1,10 @@
+node_modules/
+vendor/
+*.sqlite
+*.db
+.env
+.DS_Store
+Thumbs.db
+*.log
+product_output.html
+clear_guest_data.php

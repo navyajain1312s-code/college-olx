@@ -1,11 +1,11 @@
 // admin.js - WhatsApp-style admin panel with contacts sidebar
-import { initializeApp } from "./mock-firebase.js";
+import { initializeApp } from "./mock-firebase-v2.js";
 import {
     getDatabase, ref, push, onChildAdded, off, serverTimestamp, get
-} from "./mock-firebase.js";
+} from "./mock-firebase-v2.js";
 import {
     getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, signInAnonymously
-} from "./mock-firebase.js";
+} from "./mock-firebase-v2.js";
 
 /* ====== FIREBASE CONFIG ====== */
 const firebaseConfig = {
@@ -29,7 +29,7 @@ const contactsList = document.getElementById('contactsList');
 const messagesDiv = document.getElementById('messages');
 const replyInput = document.getElementById('replyInput');
 const sendBtn = document.getElementById('sendBtn');
-const authArea = document.getElementById('authArea');
+const chatStatusArea = document.getElementById('chatStatusArea');
 const statusBanner = document.getElementById('statusBanner');
 const emptyChat = document.getElementById('emptyChat');
 const chatHeader = document.getElementById('chatHeader');
@@ -41,7 +41,8 @@ const currentChatStatus = document.getElementById('currentChatStatus');
 /* ====== STATE MANAGEMENT ====== */
 let allMessages = []; // Store all messages
 let contacts = new Map(); // Map of buyerName -> contact info
-let currentBuyerName = null; // Currently selected buyer
+let currentBuyerName = null; // Currently selected buyer name
+let currentBuyerId = null; // Currently selected buyer ID
 let chatRef = null;
 let childListener = null;
 let sellerShopId = null; // Will be set based on logged-in user
@@ -60,66 +61,105 @@ function setStatus(text, warning = false) {
 /* ====== INIT ====== */
 function init() {
     console.log('Admin init...');
-
-    // Add Refresh Button
-    const refreshBtn = document.createElement('button');
-    refreshBtn.textContent = '🔄 Refresh Chats';
-    refreshBtn.className = 'btn btn-secondary';
-    refreshBtn.style.marginLeft = '10px';
-    refreshBtn.onclick = () => {
-        if (sellerShopId) {
-            console.log('Manual refresh for:', sellerShopId);
-            loadAllConversations(sellerShopId);
-        } else {
-            location.reload();
-        }
-    };
-    if (authArea) authArea.appendChild(refreshBtn);
 }
 
 /* ====== LOAD CONVERSATIONS ====== */
 function loadAllConversations(shopId) {
+    // Detach existing listener if any
     if (childListener) {
-        console.log('Reloading conversations for:', shopId);
+        console.log('Detaching existing listener before reloading for:', shopId);
+        try {
+            childListener(); // Call the unsubscribe function
+        } catch (e) {
+            console.warn('Error detaching listener:', e);
+        }
+        childListener = null;
     }
 
     sellerShopId = shopId;
-    chatRef = ref(db, `chats/${shopId}/messages`);
 
-    // Clear existing UI to avoid duplicates if re-running
+    // Clear existing UI
     contactsList.innerHTML = '';
     allMessages = [];
     contacts.clear();
 
-    console.log('Listening to:', `chats/${shopId}/messages`);
-    setStatus('Connecting to chat...');
+    console.log('Scanning for buyer conversations under:', `chats/${shopId}/`);
+    setStatus('Loading conversations...');
 
-    childListener = onChildAdded(chatRef, (snapshot) => {
+    // Fetch all data and scan for buyer subdirectories
+    const sellerPath = `chats/${shopId}`;
+
+    // Use get() to fetch the entire seller's chat data
+    const sellerRef = ref(db, sellerPath);
+    get(sellerRef).then(snapshot => {
+        const sellerData = snapshot.val();
+
+        if (!sellerData) {
+            console.log('No conversations found for seller:', shopId);
+            setStatus('No conversations yet');
+            return;
+        }
+
+        // Iterate through buyer subdirectories
+        Object.keys(sellerData).forEach(buyerId => {
+            const buyerData = sellerData[buyerId];
+            if (buyerData && buyerData.messages) {
+                // Set up listener for this buyer's messages
+                setupBuyerListener(shopId, buyerId);
+            }
+        });
+
+        setStatus('Loaded conversations');
+    }).catch(err => {
+        console.error('Error loading conversations:', err);
+        setStatus('Error loading conversations', true);
+    });
+}
+
+function setupBuyerListener(shopId, buyerId) {
+    const buyerMessagesPath = `chats/${shopId}/${buyerId}/messages`;
+    const buyerRef = ref(db, buyerMessagesPath);
+
+    console.log('Setting up listener for:', buyerMessagesPath);
+
+    // Listen for messages from this buyer
+    const unsubscribe = onChildAdded(buyerRef, (snapshot) => {
         const msg = snapshot.val();
         const key = snapshot.key;
 
         if (!msg || !msg.text) return;
 
-        // Add to local store
-        allMessages.push({ ...msg, key });
+        // Add buyer ID to message for tracking
+        const msgWithBuyer = { ...msg, key, buyerId };
+        allMessages.push(msgWithBuyer);
 
-        // Process for contacts list
-        updateContact(msg);
+        // Update contact info for this buyer
+        const buyerName = msg.buyerName || msg.name || buyerId;
+        updateContact({ ...msg, buyerName, buyerId });
 
         // If this message belongs to currently open chat, append it
-        if (currentBuyerName && msg.buyerName === currentBuyerName) {
+        if (currentBuyerName && currentBuyerName === buyerName) {
             renderMessage(msg);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
     });
+
+    // Store unsubscribe function (we'll need to manage multiple listeners)
+    // For now, we'll just track the first one in childListener
+    if (!childListener) {
+        childListener = unsubscribe;
+    }
 }
+
 
 function updateContact(msg) {
     const buyerName = msg.buyerName || msg.name || 'Unknown';
+    const buyerId = msg.buyerId || 'unknown';
 
     // Update contact info
     contacts.set(buyerName, {
         name: buyerName,
+        buyerId: buyerId,
         lastMsg: msg.text,
         ts: msg.ts,
     });
@@ -160,6 +200,10 @@ function getInitials(name) {
 
 function openConversation(buyerName) {
     currentBuyerName = buyerName;
+
+    // Get buyer ID from contacts
+    const contact = contacts.get(buyerName);
+    currentBuyerId = contact ? contact.buyerId : null;
 
     // Update UI
     emptyChat.style.display = 'none';
@@ -210,16 +254,20 @@ function renderMessagesForBuyer(buyerName) {
 function renderMessage(m) {
     const div = document.createElement('div');
     const isMe = m.role === 'seller';
-    div.className = `msg ${isMe ? 'sent' : 'received'}`;
+
+    // Use classes from admins.php <style> block: .message-item.client / .message-item.seller
+    div.className = `message-item ${isMe ? 'seller' : 'client'}`;
 
     const time = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const senderName = m.name || (isMe ? 'You' : 'Buyer');
 
     div.innerHTML = `
-        <div class="bubble">
-            <div class="txt">${escapeHtml(m.text)}</div>
-            <div class="meta">
+        <div class="message-bubble">
+            <div class="message-sender">${escapeHtml(senderName)}</div>
+            <div class="message-text">${escapeHtml(m.text)}</div>
+            <div class="message-time">
                 ${time}
-                ${isMe ? '<span class="tick">✓✓</span>' : ''}
+                ${isMe ? '<span>✓✓</span>' : ''}
             </div>
         </div>
     `;
@@ -239,15 +287,20 @@ function escapeHtml(text) {
 /* ====== SEND REPLY ====== */
 sendBtn.addEventListener('click', () => {
     const text = replyInput.value.trim();
-    if (!text || !currentBuyerName || !sellerShopId) return;
+    if (!text || !currentBuyerName || !currentBuyerId || !sellerShopId) {
+        console.warn('Cannot send: missing required info', { text, currentBuyerName, currentBuyerId, sellerShopId });
+        return;
+    }
 
-    const chatPath = `chats/${sellerShopId}/messages`;
+    // Send to buyer-specific path
+    const chatPath = `chats/${sellerShopId}/${currentBuyerId}/messages`;
     const messagesRef = ref(db, chatPath);
 
     push(messagesRef, {
         text: text,
         role: 'seller',
-        buyerName: currentBuyerName, // CRITICAL: Tag message with buyer name so we know who it's for
+        buyerName: currentBuyerName,
+        name: window.SELLER_USERNAME || 'Seller',
         ts: serverTimestamp()
     });
 
@@ -260,31 +313,29 @@ replyInput.addEventListener('keypress', (e) => {
 
 /* ====== AUTH STATE MANAGEMENT ====== */
 onAuthStateChanged(auth, (user) => {
-    if (!authArea) return;
+    if (!chatStatusArea) return;
+
+    chatStatusArea.innerHTML = ''; // Clear only the chat status area
 
     if (user) {
-        authArea.innerHTML = `
-            <span>Signed in as <strong>${escapeHtml(user.displayName || user.email || 'Admin')}</strong></span>
-            <button id="signOutBtn" class="btn btn-secondary">Sign out</button>
-        `;
+        // Show connection status
+        const statusSpan = document.createElement('span');
+        statusSpan.style.fontSize = '12px';
+        statusSpan.style.color = '#e0e0e0';
+        statusSpan.textContent = 'Chat Connected';
+        chatStatusArea.appendChild(statusSpan);
 
-        // Re-add refresh button if lost
+        // Add Refresh Button
         const refreshBtn = document.createElement('button');
-        refreshBtn.textContent = '🔄 Refresh Chats';
+        refreshBtn.textContent = '🔄 Refresh';
         refreshBtn.className = 'btn btn-secondary';
-        refreshBtn.style.marginLeft = '10px';
+        refreshBtn.style.fontSize = '12px';
         refreshBtn.onclick = () => {
             if (sellerShopId) loadAllConversations(sellerShopId);
             else location.reload();
         };
-        authArea.appendChild(refreshBtn);
+        chatStatusArea.appendChild(refreshBtn);
 
-        const signOutBtn = document.getElementById('signOutBtn');
-        if (signOutBtn) {
-            signOutBtn.onclick = () => {
-                signOut(auth).catch(e => console.error('Sign-out failed', e));
-            };
-        }
         setStatus('Connected', false);
 
         // Get seller shop ID from PHP session (passed via window object)
@@ -299,10 +350,12 @@ onAuthStateChanged(auth, (user) => {
         setStatus('Authenticating...', true);
         signInAnonymously(auth).catch(e => {
             console.error('Auto-auth failed', e);
-            authArea.innerHTML = `
-                <button id="signInBtn" class="btn btn-primary">Sign in with Google</button>
-            `;
-            document.getElementById('signInBtn').onclick = () => signInWithPopup(auth, provider);
+            // Only show manual login if auto fails
+            const loginBtn = document.createElement('button');
+            loginBtn.textContent = 'Enable Chat';
+            loginBtn.className = 'btn btn-primary';
+            loginBtn.onclick = () => signInWithPopup(auth, provider);
+            chatStatusArea.appendChild(loginBtn);
         });
     }
 });
